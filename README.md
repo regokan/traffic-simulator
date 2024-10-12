@@ -1,39 +1,141 @@
-# CPPND: Program a Concurrent Traffic Simulation
+# Traffic Simulation
 
-<img src="data/traffic_simulation.gif"/>
+## Overview
 
-This is the project for the fourth course in the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213): Concurrency. 
+This project simulates a traffic system with intersections, vehicles, and traffic lights using modern C++ techniques such as multi-threading, smart pointers, and move semantics. It aims to demonstrate concurrency management through `std::thread`, `std::mutex`, and condition variables while building a real-world traffic simulation.
 
-Throughout the Concurrency course, you have been developing a traffic simulation in which vehicles are moving along streets and are crossing intersections. However, with increasing traffic in the city, traffic lights are needed for road safety. Each intersection will therefore be equipped with a traffic light. In this project, you will build a suitable and thread-safe communication protocol between vehicles and intersections to complete the simulation. Use your knowledge of concurrent programming (such as mutexes, locks and message queues) to implement the traffic lights and integrate them properly in the code base.
+### Core Features
 
-## Dependencies for Running Locally
-* cmake >= 2.8
-  * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1 (Linux, Mac), 3.81 (Windows)
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* OpenCV >= 4.1
-  * The OpenCV 4.1.0 source code can be found [here](https://github.com/opencv/opencv/tree/4.1.0)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
+- **Traffic Light**: Manages the signal phases (green/red) with multi-threaded updates.
+- **Intersection**: Handles vehicle queuing and ensures safe crossing using promises, futures, and traffic light signals.
+- **Street**: Connects intersections and manages vehicle paths.
+- **Vehicle**: Simulates driving through intersections using asynchronous programming and constant velocity models.
+- **Graphics**: Provides visual rendering of traffic objects.
 
-## Basic Build Instructions
+---
 
-1. Clone this repo.
-2. Make a build directory in the top level directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./traffic_simulation`.
+## Installation
 
-## Project Tasks
+### Dependencies
 
-When the project is built initially, all traffic lights will be green. When you are finished with the project, your traffic simulation should run with red lights controlling traffic, just as in the .gif file above. See the classroom instruction and code comments for more details on each of these parts. 
+- **OpenCV 4.1+**: For rendering graphics.
+- **CMake**: Build system generator.
+- **g++ or clang++**: C++ compiler with C++17 support.
 
-- **Task FP.1** : Define a class `TrafficLight` which is a child class of `TrafficObject`. The class shall have the public methods `void waitForGreen()` and `void simulate()` as well as `TrafficLightPhase getCurrentPhase()`, where `TrafficLightPhase` is an enum that can be either `red` or `green`. Also, add the private method `void cycleThroughPhases()`. Furthermore, there shall be the private member `_currentPhase` which can take `red` or `green` as its value.
-- **Task FP.2** : Implement the function with an infinite loop that measures the time between two loop cycles and toggles the current phase of the traffic light between red and green and sends an update method to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. Also, the while-loop should use `std::this_thread::sleep_`for to wait 1ms between two cycles. Finally, the private method `cycleThroughPhases` should be started in a thread when the public method `simulate` is called. To do this, use the thread queue in the base class.
-- **Task FP.3** : Define a class `MessageQueue` which has the public methods send and receive. Send should take an rvalue reference of type TrafficLightPhase whereas receive should return this type. Also, the class should define an `std::dequeue` called `_queue`, which stores objects of type `TrafficLightPhase`. Finally, there should be an `std::condition_variable` as well as an `std::mutex` as private members.
-- **Task FP.4** : Implement the method `Send`, which should use the mechanisms `std::lock_guard<std::mutex>` as well as `_condition.notify_one()` to add a new message to the queue and afterwards send a notification. Also, in class `TrafficLight`, create a private member of type `MessageQueue` for messages of type `TrafficLightPhase` and use it within the infinite loop to push each new `TrafficLightPhase` into it by calling send in conjunction with move semantics.
-- **Task FP.5** : The method receive should use `std::unique_lock<std::mutex>` and `_condition.wait()` to wait for and receive new messages and pull them from the queue using move semantics. The received object should then be returned by the receive function. Then, add the implementation of the method `waitForGreen`, in which an infinite while-loop runs and repeatedly calls the `receive` function on the message queue. Once it receives `TrafficLightPhase::green`, the method returns.
-- **Task FP.6** : In class Intersection, add a private member `_trafficLight` of type `TrafficLight`. In method `Intersection::simulate()`, start the simulation of `_trafficLight`. Then, in method `Intersection::addVehicleToQueue`, use the methods `TrafficLight::getCurrentPhase` and `TrafficLight::waitForGreen` to block the execution until the traffic light turns green.
+---
+
+### Setup and Build Instructions
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/regokan/traffic-simulator.git
+   cd traffic-simulator
+   ```
+
+2. **Install dependencies**:
+
+   - **For Linux (Debian-based)**:
+
+     ```bash
+     make setup-debian
+     ```
+
+   - **For macOS**:
+     ```bash
+     make setup-mac
+     ```
+
+3. **Build the project**:
+
+   ```bash
+   make build
+   cd build
+   ```
+
+4. **Run the simulation**:
+
+   ```bash
+   ./traffic_simulation
+   ```
+
+5. **Format the code** (optional):
+
+   ```bash
+   make format
+   ```
+
+6. **Build with debugging symbols** (optional):
+
+   ```bash
+   make debug
+   ```
+
+7. **Clean build artifacts**:
+   ```bash
+   make clean
+   ```
+
+---
+
+## High-Level Structure
+
+The project consists of several core classes:
+
+### `TrafficLight`
+
+- Manages traffic signal changes between **red** and **green** using threads.
+- Includes methods like `waitForGreen` and `simulate` to control traffic flow.
+
+### `Intersection`
+
+- Manages vehicle queues and ensures vehicles cross intersections safely.
+- Uses **promises** and **futures** to control vehicle entry based on traffic light status.
+- Starts in a thread using the `simulate` function.
+
+### `Street`
+
+- Connects intersections to form routes for vehicles.
+- Maintains links to both inbound and outbound intersections.
+
+### `Vehicle`
+
+- Simulates a vehicle driving between intersections.
+- Uses asynchronous programming to request access to intersections.
+- Updates position along streets and manages driving speed dynamically.
+
+### `Graphics`
+
+- Renders all traffic objects on a map (e.g., Paris or NYC).
+- Displays intersections, streets, and vehicles with color-coded elements.
+
+---
+
+## Project Structure
+
+- **`src/`**: Contains the source files implementing the logic for intersections, vehicles, traffic lights, and graphics.
+- **`include/`**: Header files for all core classes.
+- **`data/`**: Image files for city maps (Paris and NYC).
+- **`CMakeLists.txt`**: Configuration file for CMake.
+- **`Makefile`**: Makefile for building and managing the project.
+
+---
+
+## Running the Simulation
+
+1. Choose a city map (Paris or NYC) in the source code (`main.cpp`).
+2. Build and run the project.
+3. Observe the vehicles moving through intersections based on the traffic light phases.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please fork the repository and submit a pull request with your improvements.
+
+---
+
+## License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)**.  
+See the full license at [http://creativecommons.org/licenses/by-nc-nd/4.0](http://creativecommons.org/licenses/by-nc-nd/4.0).

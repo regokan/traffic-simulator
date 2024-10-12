@@ -28,7 +28,6 @@ TrafficLight::TrafficLight() {
 }
 
 void TrafficLight::waitForGreen() {
-
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     auto msg = _msgQueue.receive();
@@ -47,13 +46,11 @@ void TrafficLight::toggleCurrentPhase() {
 }
 
 void TrafficLight::simulate() {
-
   threads.emplace_back(&TrafficLight::cycleThroughPhases, this);
 }
 
 // virtual function which is executed in a thread
 void TrafficLight::cycleThroughPhases() {
-
   double cycleDuration = 4.0 + static_cast<double>(rand()) / RAND_MAX * 2.0;
   auto lastUpdate = std::chrono::steady_clock::now();
   while (true) {

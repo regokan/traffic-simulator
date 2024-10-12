@@ -2,3 +2,6 @@
 
 # Build folder
 build/
+
+# VSCdoe Settings
+.vscode/settings.json
